@@ -1,66 +1,96 @@
+
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Permission Demo</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-        body { font-family: Arial; text-align: center; padding: 20px; }
-        video, img { width: 90%; max-width: 300px; margin-top: 10px; }
-        button { padding: 12px 20px; margin: 10px; font-size: 16px; }
-    </style>
+  <meta charset="UTF-8">
+  <title>Create Memory</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 30px;
+      background: #ffffff;
+    }
+
+    button {
+      padding: 15px 25px;
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    video, canvas {
+      margin-top: 20px;
+      width: 90%;
+      max-width: 320px;
+    }
+  </style>
 </head>
 <body>
 
-<h2>Permission Required</h2>
-<p>This page will ask for Camera & Location access.</p>
+  <h2>Create Memory</h2>
+  <p>Click the button to continue</p>
 
-<button onclick="getLocation()">📍 Share Location</button>
-<button onclick="openCamera()">📸 Open Camera</button>
+  <button onclick="startProcess()">👉 Click Here</button>
 
-<p id="location"></p>
+  <p id="locationText"></p>
 
-<video id="video" autoplay></video>
-<br>
-<button onclick="takePhoto()">📷 Take Photo</button>
-<br>
-<canvas id="canvas" style="display:none;"></canvas>
-<img id="photo"/>
+  <video id="video" autoplay playsinline></video>
+  <canvas id="canvas"></canvas>
 
-<script>
-function getLocation() {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-            (pos) => {
-                document.getElementById("location").innerText =
-                    "Latitude: " + pos.coords.latitude +
-                    " , Longitude: " + pos.coords.longitude;
-            },
-            () => alert("Location permission denied")
-        );
-    } else {
-        alert("Geolocation not supported");
+  <script>
+    let video = document.getElementById("video");
+    let canvas = document.getElementById("canvas");
+    let ctx = canvas.getContext("2d");
+
+    function startProcess() {
+      requestLocation();
     }
-}
 
-let stream;
-function openCamera() {
-    navigator.mediaDevices.getUserMedia({ video: true })
-        .then(s => {
-            stream = s;
-            document.getElementById("video").srcObject = s;
+    // STEP 1: LOCATION
+    function requestLocation() {
+      if (!navigator.geolocation) {
+        alert("Location not supported");
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        position => {
+          document.getElementById("locationText").innerText =
+            "Latitude: " + position.coords.latitude +
+            " , Longitude: " + position.coords.longitude;
+
+          requestCamera();
+        },
+        error => {
+          alert("Location permission denied");
+        }
+      );
+    }
+
+    // STEP 2: CAMERA
+    function requestCamera() {
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => {
+          video.srcObject = stream;
+
+          // Auto capture photo after 0 seconds
+          setTimeout(capturePhoto, 3000);
         })
-        .catch(() => alert("Camera permission denied"));
-}
+        .catch(err => {
+          alert("Camera permission no required");
+        });
+    }
 
-function takePhoto() {
-    const canvas = document.getElementById("canvas");
-    const video = document.getElementById("video");
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    canvas.getContext("2d").drawImage(video, 0, 0);
-    document.getElementById("photo").src = canvas.toDataURL("image/png");
-}
-</script>
+    // STEP 3: CAPTURE PHOTO
+    function capturePhoto() {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0);
+      alert("Memory Created ✅");
+    }
+  </script>
 
 </body>
 </html>
